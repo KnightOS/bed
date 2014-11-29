@@ -18,7 +18,8 @@ load_new_file:
     kld((file_name), hl)
     kld((index), hl)
     ld bc, 0x100
-    pcall(malloc)
+    ld a, 1
+    pcall(calloc)
     kld((file_buffer), ix)
     ret
 
