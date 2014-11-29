@@ -13,6 +13,17 @@ name:
 #include "gui.asm"
 #include "text.asm"
 start:
+    or a
+    jr z, run_new_file
+    ; TODO: Open existing files
+    ret
+
+run_new_file:
+    kcall(initialize)
+    kcall(load_new_file)
+    kjp(draw_loop)
+
+initialize:
     pcall(getLcdLock)
     pcall(getKeypadLock)
     pcall(allocScreenBuffer)
@@ -20,8 +31,8 @@ start:
     pcall(loadLibrary)
     xor a
     corelib(setCharSet)
-    kcall(load_new_file)
     pcall(flushKeys) ; To avoid setting the wrong character set right off the bat
+    ret
 
 draw_loop:
     kcall(draw_ui)

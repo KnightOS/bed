@@ -1,7 +1,7 @@
 draw_ui:
     pcall(clearBuffer)
     kld(hl, window_title)
-    xor a
+    ld a, 0b00000100
     corelib(drawWindow)
     ret
 
@@ -78,11 +78,17 @@ handle_character:
     add a, d
     ld d, a
     kld((cursor_y), de)
-    ; TODO: Handle going over the left margin
+    ld a, 2
+    cp d
+    kcall(c, end_of_previous_line)
+    ret
+
+end_of_previous_line:
+    ; TODO
     ret
 
 window_title:
-    .db "bed", 0
+    .db "bed - New file", 0
 
 cursor_y:
     .db 8
