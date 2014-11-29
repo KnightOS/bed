@@ -21,6 +21,7 @@ start:
     xor a
     corelib(setCharSet)
     kcall(load_new_file)
+    pcall(flushKeys) ; To avoid setting the wrong character set right off the bat
 
 draw_loop:
     kcall(draw_ui)
@@ -28,6 +29,7 @@ main_loop:
     kcall(draw_caret)
     pcall(fastCopy)
     corelib(getCharacterInput)
+    pcall(nz, flushKeys) ; Flush keys if we lost focus
     push bc
         kcall(handle_character)
     pop bc
