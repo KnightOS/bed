@@ -25,7 +25,7 @@ draw_caret:
         kld(de, (cursor_y))
         dec d
         ld b, 5
-        bit 0, (hl)
+        bit 7, (hl)
         kld(hl, caret)
         pcall(z, putSpriteOR)
         pcall(nz, putSpriteAND)
@@ -45,7 +45,7 @@ erase_caret:
         kld(de, (cursor_y))
         dec d
         ld b, 5
-        bit 0, (hl)
+        bit 7, (hl)
         kld(hl, caret)
         pcall(putSpriteAND)
     pop af
