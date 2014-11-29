@@ -28,7 +28,7 @@ erase_caret:
     push bc
     push af
         kld(hl, caret_state)
-        ld a, 0x80
+        xor a
         ld (hl), a
         kld(de, (cursor_y))
         ld b, 5
