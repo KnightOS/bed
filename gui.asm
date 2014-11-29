@@ -47,7 +47,7 @@ handle_character:
     kcall(insert_character)
     kcall(erase_caret)
     cp 0x08 ; Backspace
-    ret z
+    jr z, .handle_bksp
     kld(hl, char)
     ld (hl), a
     kld(de, (cursor_y))
@@ -55,6 +55,29 @@ handle_character:
     ld a, 2
     pcall(wrapStr)
     kld((cursor_y), de)
+    ret
+.handle_bksp:
+    kcall(get_previous_char_width)
+    or a
+    ret z
+    kld(de, (cursor_y))
+    push af
+        neg
+        add a, d
+        ld l, e ; y
+        ld e, a ; x
+    pop af
+    ld c, a
+    ld b, 5
+    push af
+        pcall(rectAND)
+    pop af
+    kld(de, (cursor_y))
+    neg
+    add a, d
+    ld d, a
+    kld((cursor_y), de)
+    ; TODO: Handle going over the left margin
     ret
 
 window_title:

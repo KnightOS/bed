@@ -27,9 +27,35 @@ insert_character:
     kld(hl, (file_buffer))
     kld(de, (index))
     add hl, de
-    ex de, hl
     ld (hl), a
-    ; TODO: Move other stuff
+    kld(hl, (index))
+    inc hl
+    kld((index), hl)
+    ; TODO: Move stuff around
+    ; TODO: Expand buffer if need be
+    ret
+
+delete_character:
+    kld(hl, (index))
+    dec hl
+    kld((index), hl)
+    ; TODO: Move stuff around
+    ret
+
+get_previous_char_width:
+    kld(hl, (index))
+    ld bc, 0
+    pcall(cpHLBC)
+    jr nz, _
+    ; Start of file
+    xor a
+    ret
+_:  kld(ix, (file_buffer))
+    push ix \ pop bc
+    add hl, bc
+    dec hl
+    ld a, (hl)
+    pcall(measureChar)
     ret
 
 index:
@@ -37,4 +63,6 @@ index:
 file_buffer:
     .dw 0
 file_name:
+    .dw 0
+file_length:
     .dw 0
