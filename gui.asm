@@ -3,6 +3,17 @@ draw_ui:
     kld(hl, window_title)
     ld a, 0b00000100
     corelib(drawWindow)
+    kld(hl, (index))
+    kcall(redraw_file)
+    ret
+
+redraw_file:
+    kld(de, (file_buffer))
+    add hl, de
+    kld(de, (cursor_y))
+    ld bc, 94 << 8 | 56
+    ld a, 2
+    pcall(wrapStr)
     ret
 
 draw_caret:
@@ -12,8 +23,9 @@ draw_caret:
         kld(hl, caret_state)
         inc (hl)
         kld(de, (cursor_y))
+        dec d
         ld b, 5
-        bit 7, (hl)
+        bit 0, (hl)
         kld(hl, caret)
         pcall(z, putSpriteOR)
         pcall(nz, putSpriteAND)
@@ -31,8 +43,9 @@ erase_caret:
         xor a
         ld (hl), a
         kld(de, (cursor_y))
+        dec d
         ld b, 5
-        bit 7, (hl)
+        bit 0, (hl)
         kld(hl, caret)
         pcall(putSpriteAND)
     pop af

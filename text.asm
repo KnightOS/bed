@@ -1,24 +1,43 @@
-; Creates a new file and destroys the current one, if loaded
-load_new_file:
-    ; Free the old file name
+unload_current_file:
     kld(hl, (file_name))
     ld bc, 0
     pcall(cpHLBC)
     jr z, _
     push hl \ pop ix
     pcall(free)
-_:  ; Allocate a new (NULL) file name
-    ld hl, 0
-    kld((file_name), hl)
-    ; Free the old file buffer
-    kld(hl, (file_buffer))
+_:  kld(hl, (file_buffer))
     pcall(cpHLBC)
-    jr z, _
+    ret z
     push hl \ pop ix
     pcall(free)
-_:  ld bc, 0x100
+    ret
+
+load_new_file:
+    kcall(unload_current_file)
+    ld hl, 0
+    kld((file_name), hl)
+    kld((index), hl)
+    ld bc, 0x100
     pcall(malloc)
     kld((file_buffer), ix)
+    ret
+
+load_existing_file:
+    kld((file_name), de)
+    pcall(openFileRead)
+    pcall(getStreamInfo)
+    kld((file_length), bc)
+    ; TODO: Don't just edit files in memory
+    inc bc
+    pcall(malloc)
+    pcall(streamReadToEnd)
+    push ix
+        pcall(memSeekToEnd)
+        ld (ix), 0 ; Delimiter
+    pop ix
+    kld((file_buffer), ix)
+    ld hl, 0
+    kld((index), hl)
     ret
 
 insert_character:

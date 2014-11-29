@@ -15,12 +15,20 @@ name:
 start:
     or a
     jr z, run_new_file
-    ; TODO: Open existing files
+    cp 1
+    jr z, run_open_file
     ret
 
 run_new_file:
     kcall(initialize)
     kcall(load_new_file)
+    kjp(draw_loop)
+
+run_open_file:
+    push de
+        kcall(initialize)
+    pop de
+    kcall(load_existing_file)
     kjp(draw_loop)
 
 initialize:
