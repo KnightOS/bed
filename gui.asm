@@ -60,6 +60,7 @@ handle_character:
     kcall(get_previous_char_width)
     or a
     ret z
+    kcall(delete_character)
     kld(de, (cursor_y))
     push af
         neg

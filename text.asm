@@ -23,7 +23,7 @@ _:  ld bc, 0x100
 
 insert_character:
     cp 0x08 ; Backspace
-    ret z ; TODO
+    ret z
     kld(hl, (file_buffer))
     kld(de, (index))
     add hl, de
