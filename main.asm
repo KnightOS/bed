@@ -12,6 +12,7 @@ name:
     .db "bed", 0
 #include "gui.asm"
 #include "text.asm"
+#include "actions.asm"
 start:
     or a
     jr z, run_new_file
@@ -39,11 +40,11 @@ initialize:
     pcall(loadLibrary)
     xor a
     corelib(setCharSet)
-    pcall(flushKeys) ; To avoid setting the wrong character set right off the bat
     ret
 
 draw_loop:
-    kcall(draw_ui)
+    pcall(flushKeys)
+    kcall(redraw_ui)
 main_loop:
     kcall(draw_caret)
     pcall(fastCopy)
@@ -53,8 +54,8 @@ main_loop:
         kcall(handle_character)
     pop bc
     ld a, b
-    cp kMODE
-    ret z
+    cp kF3
+    kjp(z, main_menu)
     or a
     pcall(nz, flushKeys)
     jr main_loop

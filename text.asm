@@ -16,8 +16,10 @@ load_new_file:
     kcall(unload_current_file)
     ld hl, 0
     kld((file_name), hl)
+    kld((file_length), hl)
     kld((index), hl)
     ld bc, 0x100
+    kld((file_buffer_length), bc)
     ld a, 1
     pcall(calloc)
     kld((file_buffer), ix)
@@ -30,6 +32,7 @@ load_existing_file:
     kld((file_length), bc)
     ; TODO: Don't just edit files in memory
     inc bc
+    kld((file_buffer_length), bc)
     pcall(malloc)
     pcall(streamReadToEnd)
     push ix
@@ -51,6 +54,9 @@ insert_character:
     kld(hl, (index))
     inc hl
     kld((index), hl)
+    kld(bc, (file_length))
+    inc bc
+    kld((file_length), bc)
     ; TODO: Move stuff around
     ; TODO: Expand buffer if need be
     ret
@@ -59,6 +65,9 @@ delete_character:
     kld(hl, (index))
     dec hl
     kld((index), hl)
+    kld(de, (file_buffer))
+    add hl, de
+    ld (hl), 0
     ; TODO: Move stuff around
     ret
 
@@ -81,6 +90,8 @@ _:  kld(ix, (file_buffer))
 index:
     .dw 0
 file_buffer:
+    .dw 0
+file_buffer_length:
     .dw 0
 file_name:
     .dw 0
