@@ -197,7 +197,17 @@ clear_from_cursor:
         ld c, a
         ld b, 6
         pcall(rectAND)
-        ; Clear rest of screen (TODO)
+        ; Clear rest of screen
+        kld(de, (cursor_y))
+        ld a, 48
+        sub a, e
+        ld b, a
+        ld c, 92
+
+        ld l, e ; y
+        ld e, 2 ; x
+        ld a, 6 \ add l, a \ ld l, a ; correct y
+        pcall(rectAND)
     pop af
     pop hl
     pop bc
