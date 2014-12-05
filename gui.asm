@@ -65,6 +65,8 @@ handle_left:
     kcall(get_previous_char_width)
     or a
     kjp(z, main_loop)
+    cp -1
+    jr z, .newline
     kcall(erase_caret)
     kld(de, (cursor_y))
     neg
@@ -77,11 +79,18 @@ handle_left:
     kcall(seek_back_one)
     pcall(flushKeys)
     kjp(main_loop)
+.newline:
+    kcall(move_end_of_previous_line)
+    kcall(seek_back_one)
+    pcall(flushKeys)
+    kjp(main_loop)
 
 handle_right:
     kcall(get_next_char_width)
     or a
     kjp(z, main_loop)
+    cp -1
+    jr z, .newline
     kcall(erase_caret)
     kld(de, (cursor_y))
     add a, d
@@ -89,7 +98,12 @@ handle_right:
     kld((cursor_y), de)
     ld a, 94
     cp d
-    kcall(nc, move_start_of_next_line)
+    kcall(c, move_start_of_next_line)
+    kcall(seek_forward_one)
+    pcall(flushKeys)
+    kjp(main_loop)
+.newline:
+    kcall(move_start_of_next_line)
     kcall(seek_forward_one)
     pcall(flushKeys)
     kjp(main_loop)
@@ -156,7 +170,17 @@ move_end_of_previous_line:
     ret
 
 move_start_of_next_line:
-    ; TODO
+    push de
+    push af
+        kld(de, (cursor_y))
+        ld d, 2
+        ld a, 6
+        add a, e
+        ld e, a
+        ; TODO: Scrolling
+        kld((cursor_y), de)
+    pop af
+    pop de
     ret
 
 clear_from_cursor:

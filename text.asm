@@ -80,16 +80,18 @@ insert_character:
     ld b, h \ ld c, l
     ld hl, 0
     pcall(cpHLBC)
-    jr z, _
+    jr z, _ ; Skip if we don't need to shift
     kld(hl, (file_buffer))
-    kld(de, (index))
+    kld(de, (file_length))
     add hl, de
     ex de, hl
     scf \ ccf
     sbc hl, bc
     ex de, hl
-    ld d, h \ ld e, l \ inc de
-    ldir
+    ld d, h \ ld e, l \ dec de
+    inc bc ; null terminator
+    ex de, hl
+    lddr
     ; Write new character into file :D
 _:  kld(hl, (file_buffer))
     kld(de, (index))
@@ -126,7 +128,12 @@ _:  kld(ix, (file_buffer))
     add hl, bc
     dec hl
     ld a, (hl)
+    cp '\n'
+    jr z, .newline
     pcall(measureChar)
+    ret
+.newline:
+    ld a, -1
     ret
 
 get_next_char_width:
@@ -141,7 +148,12 @@ _:  kld(ix, (file_buffer))
     push ix \ pop bc
     add hl, bc
     ld a, (hl)
+    cp '\n'
+    jr z, .newline
     pcall(measureChar)
+    ret
+.newline:
+    ld a, -1
     ret
 
 seek_back_one:
