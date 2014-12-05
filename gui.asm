@@ -80,6 +80,7 @@ handle_left:
     pcall(flushKeys)
     kjp(main_loop)
 .newline:
+    kcall(erase_caret)
     kcall(move_end_of_previous_line)
     kcall(seek_back_one)
     pcall(flushKeys)
@@ -103,6 +104,7 @@ handle_right:
     pcall(flushKeys)
     kjp(main_loop)
 .newline:
+    kcall(erase_caret)
     kcall(move_start_of_next_line)
     kcall(seek_forward_one)
     pcall(flushKeys)
