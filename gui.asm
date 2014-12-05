@@ -78,6 +78,22 @@ handle_left:
     pcall(flushKeys)
     kjp(main_loop)
 
+handle_right:
+    kcall(get_next_char_width)
+    or a
+    kjp(z, main_loop)
+    kcall(erase_caret)
+    kld(de, (cursor_y))
+    add a, d
+    ld d, a
+    kld((cursor_y), de)
+    ld a, 94
+    cp d
+    kcall(nc, move_start_of_next_line)
+    kcall(seek_forward_one)
+    pcall(flushKeys)
+    kjp(main_loop)
+
 handle_character:
     or a
     ret z
@@ -125,28 +141,21 @@ _:  kld((cursor_y), de)
     ret z
     kcall(delete_character)
     kld(de, (cursor_y))
-    push af
-        neg
-        add a, d
-        ld l, e ; y
-        ld e, a ; x
-    pop af
-    ld c, a
-    ld b, 5
-    push af
-        pcall(rectAND)
-    pop af
-    kld(de, (cursor_y))
     neg
     add a, d
     ld d, a
     kld((cursor_y), de)
+    kcall(clear_from_cursor)
     ld a, 2
     cp d
     kcall(c, move_end_of_previous_line)
     ret
 
 move_end_of_previous_line:
+    ; TODO
+    ret
+
+move_start_of_next_line:
     ; TODO
     ret
 

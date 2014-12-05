@@ -56,8 +56,8 @@ main_loop:
     ld a, b
     cp kLeft
     kjp(z, handle_left)
-    ;cp kRight
-    ;kjp(z, handle_right)
+    cp kRight
+    kjp(z, handle_right)
     cp kF3
     kjp(z, main_menu)
     or a

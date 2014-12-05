@@ -129,9 +129,30 @@ _:  kld(ix, (file_buffer))
     pcall(measureChar)
     ret
 
+get_next_char_width:
+    kld(hl, (index))
+    kld(bc, (file_length))
+    pcall(cpHLBC)
+    jr nz, _
+    ; Start of file
+    xor a
+    ret
+_:  kld(ix, (file_buffer))
+    push ix \ pop bc
+    add hl, bc
+    ld a, (hl)
+    pcall(measureChar)
+    ret
+
 seek_back_one:
     kld(hl, (index))
     dec hl
+    kld((index), hl)
+    ret
+
+seek_forward_one:
+    kld(hl, (index))
+    inc hl
     kld((index), hl)
     ret
 
