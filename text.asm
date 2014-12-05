@@ -44,7 +44,11 @@ load_existing_file:
     kld((index), hl)
     ret
 
-insert_character:
+expand_buffer:
+    ; TODO
+    ret
+
+overwrite_character:
     cp 0x08 ; Backspace
     ret z
     kld(hl, (file_buffer))
@@ -57,8 +61,46 @@ insert_character:
     kld(bc, (file_length))
     inc bc
     kld((file_length), bc)
-    ; TODO: Move stuff around
-    ; TODO: Expand buffer if need be
+    ret
+
+insert_character:
+    cp 0x08 ; Backspace
+    ret z
+    kld(hl, (index))
+    inc hl ; New character
+    inc hl ; Null terminator
+    kld(bc, (file_buffer_length))
+    pcall(cpHLBC)
+    kcall(z, expand_buffer)
+    ; Shift all text forward a character
+    kld(hl, (file_length))
+    kld(bc, (index))
+    scf \ ccf
+    sbc hl, bc
+    ld b, h \ ld c, l
+    ld hl, 0
+    pcall(cpHLBC)
+    jr z, _
+    kld(hl, (file_buffer))
+    kld(de, (index))
+    add hl, de
+    ex de, hl
+    scf \ ccf
+    sbc hl, bc
+    ex de, hl
+    ld d, h \ ld e, l \ inc de
+    ldir
+    ; Write new character into file :D
+_:  kld(hl, (file_buffer))
+    kld(de, (index))
+    add hl, de
+    ld (hl), a
+    kld(hl, (index))
+    inc hl
+    kld((index), hl)
+    kld(bc, (file_length))
+    inc bc
+    kld((file_length), bc)
     ret
 
 delete_character:
@@ -85,6 +127,12 @@ _:  kld(ix, (file_buffer))
     dec hl
     ld a, (hl)
     pcall(measureChar)
+    ret
+
+seek_back_one:
+    kld(hl, (index))
+    dec hl
+    kld((index), hl)
     ret
 
 index:
