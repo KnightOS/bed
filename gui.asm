@@ -180,14 +180,35 @@ _:  kld((cursor_y), de)
 
 move_end_of_previous_line:
     kcall(move_start_of_previous_line)
-    kjp(move_end_of_current_line)
-
+    ; Fallthrough
 move_end_of_current_line:
     push af
     push de
     push hl
     push bc
-        
+        kld(bc, (index))
+        kld(hl, (file_buffer))
+        add hl, bc
+        dec hl
+        kld(de, (cursor_y))
+.loop:
+        ld a, (hl)
+        or a
+        jr z, .done
+        cp '\n'
+        jr z, .done
+        pcall(measureChar)
+        add a, d
+        cp 94
+        jr z, .done
+        jr nc, .done
+        ld d, a
+        kld((cursor_y), de)
+        inc bc
+        kld((index), bc)
+        inc hl
+        jr .loop
+.done:
     pop bc
     pop hl
     pop de
