@@ -73,9 +73,7 @@ handle_left:
     add a, d
     ld d, a
     kld((cursor_y), de)
-    ld a, 2
-    cp d
-    kcall(c, move_end_of_previous_line)
+    kcall(nc, move_end_of_previous_line)
     kcall(seek_back_one)
     pcall(flushKeys)
     kjp(main_loop)
@@ -156,19 +154,98 @@ _:  kld((cursor_y), de)
     or a
     ret z
     kcall(delete_character)
+    cp 0xFF ; i.e. \n
+    jr z, .handle_bksp_newline
     kld(de, (cursor_y))
     neg
     add a, d
     ld d, a
     kld((cursor_y), de)
     kcall(clear_from_cursor)
-    ld a, 2
-    cp d
-    kcall(c, move_end_of_previous_line)
+
+    ; Redraw
+    kld(hl, (file_buffer))
+    kld(bc, (index))
+    add hl, bc
+    ld bc, 94 << 8 | 64
+    push af
+    push de
+        ld a, 2
+        pcall(wrapStr)
+    pop de
+    pop af
     ret
+.handle_bksp_newline:
+    kjp(z, move_end_of_previous_line)
 
 move_end_of_previous_line:
-    ; TODO
+    kcall(move_start_of_previous_line)
+    kjp(move_end_of_current_line)
+
+move_end_of_current_line:
+    push af
+    push de
+    push hl
+    push bc
+        
+    pop bc
+    pop hl
+    pop de
+    pop af
+    ret
+
+move_start_of_previous_line:
+    ; This works by seeking backwards until it finds the start of the previous line, and then measuring forwards.
+    ; The start of the previous line has been found when:
+    ;   1. We have reached the start of the file
+    ;   2. We have reached a \n (TODO: \r isn't really supported here)
+    ;   3. We have measured enough characters to fill an entire line
+    ; When we reached the start, we measure forwards until we would have hit a new line, and then there we are.
+    ; NOTE: This also handles seeking in the file, but leaves the index one too far ahead. Call seek_back_one to fix.
+    ; TODO: Scrolling up
+    push af
+    push de
+    push hl
+    push bc
+        kld(bc, (index)) ; Cannot go further back than BC
+        kld(hl, (file_buffer))
+        add hl, bc \ dec hl \ dec bc
+        ld d, 94 - 2 ; X. Subtracting 2 lets us use the carry flag to determine when we've hit the edge
+        ld a, (hl)
+        cp '\n'
+        jr nz, .loop
+        dec hl ; Skip the first \n if present, otherwise we're just moving back to our own line
+        dec bc
+.loop:
+        ld a, (hl)
+        dec hl
+        cp '\n'
+        jr z, .found
+        kcall(.temp)
+        neg \ add d, a \ ld d, a
+        kjp(m, .found)
+        ; Loop back
+        kld((index), bc)
+        dec bc ; Intentionally out of order.
+        xor a
+        cp c
+        jr nz, .loop
+        cp b
+        jr nz, .loop
+.found:
+        kld(de, (cursor_y))
+        ld d, 2
+        ld a, -6
+        add a, e
+        ld e, a
+        kld((cursor_y), de)
+    pop bc
+    pop hl
+    pop de
+    pop af
+    ret
+.temp:
+    pcall(measureChar)
     ret
 
 move_start_of_next_line:
@@ -179,7 +256,7 @@ move_start_of_next_line:
         ld a, 6
         add a, e
         ld e, a
-        ; TODO: Scrolling
+        ; TODO: Scrolling down
         kld((cursor_y), de)
     pop af
     pop de

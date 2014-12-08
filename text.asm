@@ -111,8 +111,18 @@ delete_character:
     kld((index), hl)
     kld(de, (file_buffer))
     add hl, de
-    ld (hl), 0
-    ; TODO: Move stuff around
+    ld d, h \ ld e, l
+    inc hl
+    push hl
+        kld(bc, (index))
+        kld(hl, (file_length))
+        add hl, bc
+        ld b, h \ ld c, l
+    pop hl
+    ldir
+    kld(bc, (file_length))
+    dec bc
+    kld((file_length), bc)
     ret
 
 get_previous_char_width:
