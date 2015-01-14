@@ -36,8 +36,8 @@ load_existing_file:
     pcall(malloc)
     pcall(streamReadToEnd)
     push ix
-        pcall(memSeekToEnd)
-        ld (ix), 0 ; Delimiter
+        add ix, bc
+        ld (ix + -1), 0 ; Delimiter
     pop ix
     kld((file_buffer), ix)
     ld hl, 0
