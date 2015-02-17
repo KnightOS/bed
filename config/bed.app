@@ -1,3 +1,3 @@
 name=Bed
 exec=/bin/bed
-icon=/share/icons/editor.kio
+icon=/share/icons/bed.img
