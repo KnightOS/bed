@@ -3,6 +3,11 @@ redraw_ui:
     kld(hl, window_title)
     ld a, 0b00000100
     corelib(drawWindow)
+    ld e, 0
+    ld l, 7
+    ld c, 96
+    ld b, 49
+    pcall(rectAND)
     kld(hl, (index))
     kcall(redraw_entire_file)
     ret
@@ -12,15 +17,15 @@ redraw_file:
     add hl, de
     kld(de, (cursor_y))
     ld bc, 94 << 8 | 56
-    ld a, 2
+    xor a
     pcall(wrapStr)
     ret
 
 redraw_entire_file:
     kld(hl, (file_buffer))
-    ld de, 0x0208
+    ld de, 0x0008
     ld bc, 94 << 8 | 56
-    ld a, 2
+    xor a
     pcall(wrapStr)
     ret
 
@@ -28,15 +33,23 @@ draw_caret:
     push hl
     push de
     push bc
+    push af
         kld(hl, caret_state)
+        ld a, (hl)
         inc (hl)
         kld(de, (cursor_y))
-        dec d
+        push af
+            ld a, d
+            or a
+            jr z, _
+            dec d
+_:      pop af
         ld b, 5
-        bit 7, (hl)
+        xor (hl)
         kld(hl, caret)
-        pcall(z, putSpriteOR)
-        pcall(nz, putSpriteAND)
+        bit 7, a
+        pcall(nz, putSpriteXOR)
+    pop af
     pop bc
     pop de
     pop hl
@@ -47,14 +60,20 @@ erase_caret:
     push de
     push bc
     push af
-        kld(hl, caret_state)
-        xor a
-        ld (hl), a
         kld(de, (cursor_y))
+
+        ld a, d
+        or a
+        jr z, _
         dec d
+_:      
         ld b, 5
         kld(hl, caret)
-        pcall(putSpriteAND)
+        kld(a, (caret_state))
+        bit 7, a
+        pcall(nz, putSpriteXOR)
+        xor a
+        kld((caret_state), a)
     pop af
     pop bc
     pop de
@@ -123,10 +142,10 @@ handle_character:
     add hl, bc
     dec hl
     kld(de, (cursor_y))
-    ld bc, 94 << 8 | 64
+    ld bc, 97 << 8 | 64
     push af
     push de
-        ld a, 2
+        xor a
         pcall(wrapStr)
     pop de
     pop af
@@ -134,18 +153,17 @@ handle_character:
     ld l, a
     add a, d
     ld d, a
-    cp 94
+    cp 96
     jr c, _
     ld a, 6
     add e, a
     ld e, a
-    ld d, l
-    inc d \ inc d
+    ld d, 0
 _:  kld((cursor_y), de)
     ret
 .handle_newline:
     kld(de, (cursor_y))
-    ld b, 2
+    ld b, 0
     pcall(newline)
     kld((cursor_y), de)
     ret
@@ -167,10 +185,10 @@ _:  kld((cursor_y), de)
     kld(hl, (file_buffer))
     kld(bc, (index))
     add hl, bc
-    ld bc, 94 << 8 | 64
+    ld bc, 97 << 8 | 64
     push af
     push de
-        ld a, 2
+        xor a
         pcall(wrapStr)
     pop de
     pop af
@@ -231,7 +249,7 @@ move_start_of_previous_line:
         kld(bc, (index)) ; Cannot go further back than BC
         kld(hl, (file_buffer))
         add hl, bc \ dec hl \ dec bc
-        ld d, 94 - 2 ; X. Subtracting 2 lets us use the carry flag to determine when we've hit the edge
+        ld d, 94 ; X. Subtracting 2 lets us use the carry flag to determine when we've hit the edge
         ld a, (hl)
         cp '\n'
         jr nz, .loop
@@ -255,7 +273,7 @@ move_start_of_previous_line:
         jr nz, .loop
 .found:
         kld(de, (cursor_y))
-        ld d, 2
+        ld d, 0
         ld a, -6
         add a, e
         ld e, a
@@ -273,7 +291,7 @@ move_start_of_next_line:
     push de
     push af
         kld(de, (cursor_y))
-        ld d, 2
+        ld d, 0
         ld a, 6
         add a, e
         ld e, a
@@ -305,7 +323,7 @@ clear_from_cursor:
         ld c, 92
 
         ld l, e ; y
-        ld e, 2 ; x
+        ld e, 0 ; x
         ld a, 6 \ add l, a \ ld l, a ; correct y
         pcall(rectAND)
     pop af
@@ -344,7 +362,7 @@ window_title:
 cursor_y:
     .db 8
 cursor_x:
-    .db 2
+    .db 0
 caret:
     .db 0b10000000
     .db 0b10000000

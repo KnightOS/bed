@@ -115,7 +115,7 @@ delete_character:
     inc hl
     push hl
         kld(bc, (index))
-        kld(hl, (file_length))
+        kld(hl, (file_length)) ; TODO: Pretty sure this is wrong
         add hl, bc
         ld b, h \ ld c, l
     pop hl
