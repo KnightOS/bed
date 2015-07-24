@@ -10,9 +10,9 @@
     .db KEXC_HEADER_END
 name:
     .db "bed", 0
-#include "gui.asm"
-#include "text.asm"
-#include "actions.asm"
+#include "src/gui.asm"
+#include "src/text.asm"
+#include "src/actions.asm"
 start:
     or a
     jr z, run_new_file

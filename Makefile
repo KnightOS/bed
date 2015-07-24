@@ -2,9 +2,9 @@ include .knightos/variables.make
 
 ALL_TARGETS:=$(BIN)bed $(APPS)bed.app $(SHARE)icons/bed.img
 
-$(BIN)bed: *.asm
+$(BIN)bed: src/*.asm
 	mkdir -p $(BIN)
-	$(AS) $(ASFLAGS) --listing $(OUT)main.list main.asm $(BIN)bed
+	$(AS) $(ASFLAGS) --listing $(OUT)main.list src/main.asm $(BIN)bed
 
 $(APPS)bed.app: config/bed.app
 	mkdir -p $(APPS)

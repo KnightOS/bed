@@ -7,7 +7,7 @@ redraw_ui:
     ld l, 7
     ld c, 96
     ld b, 49
-    pcall(rectAND)
+    pcall(rectAND) ; Clear the area for text
     kld(hl, (index))
     kcall(redraw_entire_file)
     ret
@@ -371,6 +371,7 @@ caret:
     .db 0b10000000
 caret_state:
     .db 0
+
 menu:
     .db 3
     .db "Save", 0

@@ -45,8 +45,15 @@ load_existing_file:
     ret
 
 expand_buffer:
-    ; TODO
+    kld(ix, (file_buffer))
+    kld(hl, (file_buffer_length))
+    ld bc, 100
+    add hl, bc
+    ld b, h \ ld c, l
+    pcall(realloc)
+    kld((file_buffer), ix)
     ret
+    ; TODO: shrink_buffer? Is that necessary?
 
 overwrite_character:
     cp 0x08 ; Backspace
@@ -66,6 +73,7 @@ overwrite_character:
 insert_character:
     cp 0x08 ; Backspace
     ret z
+
     kld(hl, (index))
     inc hl ; New character
     inc hl ; Null terminator
