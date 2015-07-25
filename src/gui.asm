@@ -22,16 +22,9 @@ caret:
 ; Buffer index of the character in the top left
 file_top:
     .dw 0
-
-; Pixels from the left that we've scrolled out of view
-; i.e. if we have a line like this:
-; Hello world
-; it will render as:
-; llo world
-; if scroll_x is set to 8.
+; Characters scrolled out of view on the left
 scroll_x:
-    .db 0
-; TODO: Support scrolling further than 256 pixels right
+    .db 0 ; TODO: Support scrolling further than 256 pixels right
 
 draw_file:
     kld(ix, (file_buffer))
@@ -42,6 +35,9 @@ draw_file:
     kcall(draw_line)
     ld a, (ix)
     or a
+    ret z
+    ld a, 64 - 8
+    cp e
     ret z
     jr .line_loop
 
