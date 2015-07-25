@@ -58,6 +58,7 @@ draw_line:
     jr c, .overflow
     jr .loop
 .newline:
+    ld b, 0
     pcall(newline)
     ret
 .overflow:
