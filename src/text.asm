@@ -19,7 +19,7 @@ load_new_file:
     kld((file_length), hl)
     kld((buffer_index), hl)
     ld bc, 0x100
-    kld((file_buffer_length), bc)
+    kld((buffer_length), bc)
     ld a, 1
     pcall(calloc)
     kld((file_buffer), ix)
@@ -30,10 +30,9 @@ load_existing_file:
     pcall(openFileRead)
     pcall(getStreamInfo)
     kld((file_length), bc)
-    ; TODO: Don't just edit files in memory
     inc bc
-    kld((file_buffer_length), bc)
-    pcall(malloc)
+    kld((buffer_length), bc)
+    pcall(malloc) ; TODO: Don't load entire file into memory
     pcall(streamReadToEnd)
     push ix
         add ix, bc
@@ -46,11 +45,12 @@ load_existing_file:
 
 expand_buffer:
     kld(ix, (file_buffer))
-    kld(hl, (file_buffer_length))
+    kld(hl, (buffer_length))
     ld bc, 100
     add hl, bc
     ld b, h \ ld c, l
     pcall(realloc)
+    pcall(nz, showError)
     kld((file_buffer), ix)
     ret
     ; TODO: shrink_buffer? Is that necessary?
@@ -72,42 +72,49 @@ overwrite_character:
 
 insert_character:
     cp 0x08 ; Backspace
-    ret z
-
-    kld(hl, (buffer_index))
-    inc hl ; New character
+    jr z, delete_character
+    ; Check if we need to expand the buffer
+    kld(hl, (file_length))
     inc hl ; Null terminator
-    kld(bc, (file_buffer_length))
+    kld(bc, (buffer_length))
     pcall(cpHLBC)
     kcall(z, expand_buffer)
-    ; Shift all text forward a character
+
     kld(hl, (file_length))
     kld(bc, (buffer_index))
     scf \ ccf
     sbc hl, bc
-    ld b, h \ ld c, l
+    ld b, h \ ld c, l ; BC == length of buffer ahead of caret
     ld hl, 0
     pcall(cpHLBC)
-    jr z, _ ; Skip if we don't need to shift
-    kld(hl, (file_buffer))
-    kld(de, (file_length))
-    add hl, de
-    ex de, hl
-    scf \ ccf
-    sbc hl, bc
-    ex de, hl
-    ld d, h \ ld e, l \ dec de
-    inc bc ; null terminator
-    ex de, hl
+    jr z, .do_insertion
+
+    ; Shift characters to make room
+    ; lddr:
+    ; HL: last character
+    ; DE: next character
+    ; BC: Already set
+    push bc
+        kld(hl, (file_buffer))
+        kld(bc, (file_length))
+        inc bc ; null terminator
+        add hl, bc
+        ld e, l \ ld d, h
+        inc de
+    pop bc
+    inc bc \ inc bc ; Include null terminator
     lddr
-    ; Write new character into file :D
-_:  kld(hl, (file_buffer))
-    kld(de, (buffer_index))
-    add hl, de
+.do_insertion:
+    ; Insert character
+    kld(hl, (file_buffer))
+    kld(bc, (buffer_index))
+    add hl, bc
     ld (hl), a
+    ; Increment caret
     kld(hl, (buffer_index))
     inc hl
     kld((buffer_index), hl)
+    ; Increment file length
     kld(bc, (file_length))
     inc bc
     kld((file_length), bc)
@@ -190,7 +197,7 @@ buffer_index:
     .dw 0
 file_buffer:
     .dw 0
-file_buffer_length:
+buffer_length:
     .dw 0
 file_name:
     .dw 0

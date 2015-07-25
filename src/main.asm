@@ -69,16 +69,24 @@ main_loop:
     jr main_loop
 
 handle_character:
-    ; TODO
-    ret
+    or a
+    ret z
+    kcall(insert_character)
+    kjp(draw_loop)
 
 handle_left:
-    ; TODO
-    ret
+    kld(a, (scroll_x))
+    or a
+    jr z, main_loop
+    dec a
+    kld((scroll_x), a)
+    kjp(draw_loop)
 
 handle_right:
-    ; TODO
-    ret
+    kld(a, (scroll_x))
+    inc a
+    kld((scroll_x), a)
+    kjp(draw_loop)
 
 main_menu:
     ld c, 40
