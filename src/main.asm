@@ -14,11 +14,15 @@ name:
 #include "src/text.asm"
 #include "src/actions.asm"
 start:
+    kld(de, test_path)
+    jr run_open_file
     or a
     jr z, run_new_file
     cp 1
     jr z, run_open_file
     ret
+test_path:
+    .db "/var/applications/bed.app", 0
 
 run_new_file:
     kcall(initialize)
@@ -63,6 +67,51 @@ main_loop:
     or a
     pcall(nz, flushKeys)
     jr main_loop
+
+handle_character:
+    ; TODO
+    ret
+
+handle_left:
+    ; TODO
+    ret
+
+handle_right:
+    ; TODO
+    ret
+
+main_menu:
+    ld c, 40
+    kld(hl, menu)
+    corelib(showMenu)
+    cp 0xFF
+    kjp(z, draw_loop)
+    add a, a ; A *= 2
+    kld(hl, menu_functions)
+    add a, l \ ld l, a \ jr nc, $+3 \ inc h
+    ld e, (hl) \ inc hl \ ld d, (hl)
+    ex de, hl
+    push hl
+        pcall(getCurrentThreadId)
+        pcall(getEntryPoint)
+    pop bc
+    add hl, bc
+    kld((.menu_smc + 1), hl)
+.menu_smc:
+    jp 0
+menu_functions:
+    .dw action_save
+    .dw draw_loop
+    .dw action_exit
+
+window_title:
+    .db "bed - New file", 0
+
+menu:
+    .db 3
+    .db "Save", 0
+    .db "Open", 0
+    .db "Exit", 0
 
 corelib_path:
     .db "/lib/core", 0

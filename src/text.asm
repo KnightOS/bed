@@ -17,7 +17,7 @@ load_new_file:
     ld hl, 0
     kld((file_name), hl)
     kld((file_length), hl)
-    kld((index), hl)
+    kld((buffer_index), hl)
     ld bc, 0x100
     kld((file_buffer_length), bc)
     ld a, 1
@@ -41,7 +41,7 @@ load_existing_file:
     pop ix
     kld((file_buffer), ix)
     ld hl, 0
-    kld((index), hl)
+    kld((buffer_index), hl)
     ret
 
 expand_buffer:
@@ -59,12 +59,12 @@ overwrite_character:
     cp 0x08 ; Backspace
     ret z
     kld(hl, (file_buffer))
-    kld(de, (index))
+    kld(de, (buffer_index))
     add hl, de
     ld (hl), a
-    kld(hl, (index))
+    kld(hl, (buffer_index))
     inc hl
-    kld((index), hl)
+    kld((buffer_index), hl)
     kld(bc, (file_length))
     inc bc
     kld((file_length), bc)
@@ -74,7 +74,7 @@ insert_character:
     cp 0x08 ; Backspace
     ret z
 
-    kld(hl, (index))
+    kld(hl, (buffer_index))
     inc hl ; New character
     inc hl ; Null terminator
     kld(bc, (file_buffer_length))
@@ -82,7 +82,7 @@ insert_character:
     kcall(z, expand_buffer)
     ; Shift all text forward a character
     kld(hl, (file_length))
-    kld(bc, (index))
+    kld(bc, (buffer_index))
     scf \ ccf
     sbc hl, bc
     ld b, h \ ld c, l
@@ -102,27 +102,27 @@ insert_character:
     lddr
     ; Write new character into file :D
 _:  kld(hl, (file_buffer))
-    kld(de, (index))
+    kld(de, (buffer_index))
     add hl, de
     ld (hl), a
-    kld(hl, (index))
+    kld(hl, (buffer_index))
     inc hl
-    kld((index), hl)
+    kld((buffer_index), hl)
     kld(bc, (file_length))
     inc bc
     kld((file_length), bc)
     ret
 
 delete_character:
-    kld(hl, (index))
+    kld(hl, (buffer_index))
     dec hl
-    kld((index), hl)
+    kld((buffer_index), hl)
     kld(de, (file_buffer))
     add hl, de
     ld d, h \ ld e, l
     inc hl
     push hl
-        kld(bc, (index))
+        kld(bc, (buffer_index))
         kld(hl, (file_length)) ; TODO: Pretty sure this is wrong
         add hl, bc
         ld b, h \ ld c, l
@@ -134,7 +134,7 @@ delete_character:
     ret
 
 get_previous_char_width:
-    kld(hl, (index))
+    kld(hl, (buffer_index))
     ld bc, 0
     pcall(cpHLBC)
     jr nz, _
@@ -155,7 +155,7 @@ _:  kld(ix, (file_buffer))
     ret
 
 get_next_char_width:
-    kld(hl, (index))
+    kld(hl, (buffer_index))
     kld(bc, (file_length))
     pcall(cpHLBC)
     jr nz, _
@@ -175,18 +175,18 @@ _:  kld(ix, (file_buffer))
     ret
 
 seek_back_one:
-    kld(hl, (index))
+    kld(hl, (buffer_index))
     dec hl
-    kld((index), hl)
+    kld((buffer_index), hl)
     ret
 
 seek_forward_one:
-    kld(hl, (index))
+    kld(hl, (buffer_index))
     inc hl
-    kld((index), hl)
+    kld((buffer_index), hl)
     ret
 
-index:
+buffer_index:
     .dw 0
 file_buffer:
     .dw 0
