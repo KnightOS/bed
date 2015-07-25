@@ -54,7 +54,7 @@ draw_line:
     pcall(drawChar)
     ld a, 96
     cp d
-    jr z, .overflow
+    jr z, .finish
     jr c, .overflow
     jr .loop
 .newline:
@@ -75,6 +75,7 @@ draw_line:
         kld(hl, .mark)
         pcall(putSpriteOR)
     pop de
+.finish:
     ; Skip to newline/end
     ld a, (ix)
     inc ix
