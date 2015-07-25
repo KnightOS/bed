@@ -19,14 +19,18 @@ caret:
     .db 0b10000000
     .db 0b10000000
 
-; Buffer index of the character in the top left
 file_top:
-    .dw 0
-; Characters scrolled out of view on the left
+    .dw 0 ; Buffer index of the character in the top left
+
 scroll_x:
-    .db 0 ; TODO: Support scrolling further than 256 pixels right
+    .db 0 ; Characters scrolled out of view on the left
+
+end_visible:
+    .db 0 ; 1 if the end of the file is on-screen
 
 draw_file:
+    xor a
+    kld((end_visible), a)
     kld(ix, (file_buffer))
     kld(bc, (file_top))
     add ix, bc
@@ -35,19 +39,41 @@ draw_file:
     kcall(draw_line)
     ld a, (ix)
     or a
-    ret z
+    jr z, .eof
     ld a, 64 - 8
     cp e
     ret z
     jr .line_loop
+.eof:
+    inc a
+    kld((end_visible), a)
+    ret
 
-; TODO: horizontal scrolling
 ; This should skip characters until we encounter one that'll show on-screen
 draw_line:
-.loop:
+    ; Early exit (avoids drawing continuation mark on left)
     ld a, (ix)
     or a
     ret z
+    cp '\n'
+    jr z, .newline
+
+    kld(a, (scroll_x))
+    or a
+    jr z, .loop
+    ld b, a
+.scroll_loop:
+    ld a, (ix)
+    or a
+    ret z
+    inc ix
+    cp '\n'
+    jr z, .newline
+    djnz .scroll_loop
+.loop:
+    ld a, (ix)
+    or a
+    jr z, .left_margin_mark
     inc ix
     cp '\n'
     jr z, .newline
@@ -58,6 +84,7 @@ draw_line:
     jr c, .overflow
     jr .loop
 .newline:
+    kcall(.left_margin_mark)
     ld b, 0
     pcall(newline)
     ret
@@ -76,6 +103,7 @@ draw_line:
         pcall(putSpriteOR)
     pop de
 .finish:
+    kcall(.left_margin_mark)
     ; Skip to newline/end
     ld a, (ix)
     inc ix
@@ -84,11 +112,34 @@ draw_line:
     cp '\n'
     jr nz, .overflow
     jr .newline
+.left_margin_mark:
+    kld(a, (scroll_x))
+    or a
+    ret z
+    push de
+        ld c, 4
+        ld b, 6
+        ld l, e
+        ld e, 0
+        pcall(rectAND)
+    pop de \ push de
+        kld(hl, .mark_left)
+        ld b, 5
+        ld d, 0
+        pcall(putSpriteOR)
+    pop de
+    ret
 .mark:
     .db 0b00000000
     .db 0b00100000
     .db 0b11100000
     .db 0b00100000
+    .db 0b00000000
+.mark_left:
+    .db 0b00000000
+    .db 0b10000000
+    .db 0b11100000
+    .db 0b10000000
     .db 0b00000000
 
 draw_caret:
