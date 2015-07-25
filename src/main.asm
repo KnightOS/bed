@@ -15,8 +15,6 @@ name:
 #include "src/text.asm"
 #include "src/actions.asm"
 start:
-    kld(de, test_path)
-    jr run_open_file
     or a
     jr z, run_new_file
     cp 1
@@ -105,12 +103,11 @@ get_window_title:
     inc hl \ inc hl
     ret
 .new_file:
-    kld(hl, (window_title))
+    kld(hl, window_title)
     ret
 .no_slash:
     kld(hl, (file_name))
     ret
-
 window_title:
     .db "New file", 0
 
