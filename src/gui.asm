@@ -1,6 +1,7 @@
 redraw_ui:
     pcall(clearBuffer)
-    kld(hl, window_title)
+    kcall(get_window_title)
+    kld((name_ptr), hl)
     ld a, 0b00000100
     corelib(drawWindow)
     ld e, 0

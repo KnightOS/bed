@@ -6,6 +6,7 @@
     .db KEXC_STACK_SIZE
     .dw 40
     .db KEXC_NAME
+name_ptr:
     .dw name
     .db KEXC_HEADER_END
 name:
@@ -88,6 +89,31 @@ handle_right:
     kld((scroll_x), a)
     kjp(draw_loop)
 
+get_window_title:
+    kld(hl, (file_name))
+    ld bc, 0
+    pcall(cpHLBC)
+    jr z, .new_file
+    ld b, '/'
+    pcall(strchr)
+    jr nz, .no_slash
+    ; basename
+    xor a
+    cpir
+    ld a, '/'
+    cpdr
+    inc hl \ inc hl
+    ret
+.new_file:
+    kld(hl, (window_title))
+    ret
+.no_slash:
+    kld(hl, (file_name))
+    ret
+
+window_title:
+    .db "New file", 0
+
 main_menu:
     ld c, 40
     kld(hl, menu)
@@ -111,9 +137,6 @@ menu_functions:
     .dw action_save
     .dw draw_loop
     .dw action_exit
-
-window_title:
-    .db "bed - New file", 0
 
 menu:
     .db 3
