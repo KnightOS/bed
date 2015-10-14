@@ -2,7 +2,6 @@ action_exit:
     pcall(exitThread)
 action_save:
     ; TODO: Prepopulate this with existing file name
-    ; Wow this editor is half-assed
     kld(hl, save_prompt)
     ld bc, 0x100
     pcall(malloc)

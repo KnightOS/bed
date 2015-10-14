@@ -46,12 +46,14 @@ load_existing_file:
 expand_buffer:
     kld(ix, (file_buffer))
     kld(hl, (buffer_length))
-    ld bc, 100
+    ld bc, 0x100
     add hl, bc
     ld b, h \ ld c, l
     pcall(realloc)
-    pcall(nz, showError)
+    corelib(nz, showError)
     kld((file_buffer), ix)
+    kld((buffer_length), bc)
+    scf
     ret
     ; TODO: shrink_buffer? Is that necessary?
 
@@ -79,6 +81,7 @@ insert_character:
     kld(bc, (buffer_length))
     pcall(cpHLBC)
     kcall(z, expand_buffer)
+    kcall(nc, expand_buffer)
 
     kld(hl, (file_length))
     kld(bc, (buffer_index))
@@ -110,6 +113,9 @@ insert_character:
     kld(bc, (buffer_index))
     add hl, bc
     ld (hl), a
+    inc hl
+    xor a
+    ld (hl), a ; null terminator
     ; Increment caret
     kld(hl, (buffer_index))
     inc hl
