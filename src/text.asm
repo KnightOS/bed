@@ -39,7 +39,7 @@ load_existing_file:
         ld (ix + -1), 0 ; Delimiter
     pop ix
     kld((file_buffer), ix)
-    ld hl, 0
+    ld hl, 3
     kld((buffer_index), hl)
     ret
 

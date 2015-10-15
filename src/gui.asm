@@ -1,5 +1,9 @@
 redraw_ui:
     pcall(clearBuffer)
+    ld hl, 0
+    kld((caret_x), hl)
+    ld a, 0x7F
+    kld((caret_state), a)
     kcall(get_window_title)
     push hl
         kld(bc, 0)
@@ -24,6 +28,12 @@ caret:
     .db 0b10000000
     .db 0b10000000
     .db 0b10000000
+caret_state:
+    .db 0x7F
+caret_x:
+    .db 0
+caret_y:
+    .db 0
 
 file_top:
     .dw 0 ; Buffer index of the character in the top left
@@ -64,6 +74,7 @@ draw_line:
     cp '\n'
     jr z, .newline
 
+    push ix \ pop hl
     kld(a, (scroll_x))
     or a
     jr z, .loop
@@ -73,14 +84,17 @@ draw_line:
     or a
     ret z
     inc ix
+    inc hl
     cp '\n'
     jr z, .newline
     djnz .scroll_loop
 .loop:
+    kcall(check_caret)
     ld a, (ix)
     or a
     jr z, .left_margin_mark
     inc ix
+    inc hl
     cp '\n'
     jr z, .newline
     pcall(drawChar)
@@ -96,6 +110,7 @@ draw_line:
     ret
 .overflow:
     ; Draw continuation mark
+    push hl
     push de
         ld l, e
         ld e, 92
@@ -108,11 +123,13 @@ draw_line:
         kld(hl, .mark)
         pcall(putSpriteOR)
     pop de
+    pop hl
 .finish:
     kcall(.left_margin_mark)
     ; Skip to newline/end
     ld a, (ix)
     inc ix
+    inc hl
     or a
     jr z, .newline
     cp '\n'
@@ -122,6 +139,7 @@ draw_line:
     kld(a, (scroll_x))
     or a
     ret z
+    push hl
     push de
         ld c, 4
         ld b, 6
@@ -134,6 +152,7 @@ draw_line:
         ld d, 0
         pcall(putSpriteOR)
     pop de
+    pop hl
     ret
 .mark:
     .db 0b00000000
@@ -148,6 +167,49 @@ draw_line:
     .db 0b10000000
     .db 0b00000000
 
+check_caret:
+    push hl
+    push bc
+        kld(bc, (buffer_index))
+        or a
+        sbc hl, bc
+        kld(bc, (file_buffer))
+        or a
+        sbc hl, bc
+        jr nz, .not_here
+        push af
+            ld a, d
+            kld((caret_x), a)
+            ld a, e
+            kld((caret_y), a)
+        pop af
+.not_here:
+    pop bc
+    pop hl
+    ret
+
 draw_caret:
-    ; TODO
+    ; We increment caret_state each iteration
+    ; When bit 7 changes, we toggle the caret
+    kld(hl, caret_state)
+    ld a, (hl)
+    and 0x80
+    ld b, a
+    inc (hl)
+    ld a, (hl)
+    and 0x80
+    xor b
+    ret z
+
+    kld(hl, caret)
+    ld b, 5
+    kld(a, (caret_x))
+    ld d, a
+    or a
+    jr z, _
+    dec d
+_:  kld(a, (caret_y))
+    ld e, a
+    or a
+    pcall(nz, putSpriteXOR)
     ret
