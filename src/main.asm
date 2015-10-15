@@ -15,13 +15,15 @@ name:
 #include "src/text.asm"
 #include "src/actions.asm"
 start:
+    kld(de, test_path)
+    jr run_open_file
     or a
     jr z, run_new_file
     cp 1
     jr z, run_open_file
     ret
 test_path:
-    .db "/var/applications/bed.app", 0
+    .db "/home/main.asm", 0
 
 run_new_file:
     kcall(initialize)
@@ -61,6 +63,10 @@ main_loop:
     kjp(z, handle_left)
     cp kRight
     kjp(z, handle_right)
+    cp kDown
+    kjp(z, handle_down)
+    cp kUp
+    kjp(z, handle_up)
     cp kF3
     kjp(z, main_menu)
     or a
@@ -85,6 +91,47 @@ handle_right:
     kld(a, (scroll_x))
     inc a
     kld((scroll_x), a)
+    kjp(draw_loop)
+
+handle_down:
+    kld(hl, (file_buffer))
+    kld(de, (file_top))
+    add hl, de
+.loop:
+    ld a, (hl)
+    inc hl
+    inc de
+    or a
+    kjp(z, draw_loop) ; abort
+    cp '\n'
+    jr nz, .loop
+    kld((file_top), de)
+    kjp(draw_loop)
+
+handle_up:
+    kld(hl, (file_buffer))
+    kld(bc, (file_buffer))
+    kld(de, (file_top))
+    add hl, de
+.first_loop: ; find the previous newline
+    pcall(cpHLBC)
+    kjp(z, draw_loop) ; abort
+    ld a, (hl)
+    dec hl
+    dec de
+    cp '\n'
+    jr nz, .first_loop
+.loop: ; find the next one
+    pcall(cpHLBC)
+    jr z, .end
+    ld a, (hl)
+    dec hl
+    dec de
+    cp '\n'
+    jr nz, .loop
+    inc de \ inc de
+.end:
+    kld((file_top), de)
     kjp(draw_loop)
 
 get_window_title:
