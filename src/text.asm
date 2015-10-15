@@ -53,6 +53,29 @@ expand_buffer:
     corelib(nz, showError)
     kld((file_buffer), ix)
     kld((buffer_length), bc)
+    push hl
+    push de
+    push bc
+    push af
+        push ix \ pop hl
+        kld(bc, (file_length))
+        add hl, bc
+        push hl
+            kld(hl, (buffer_length))
+            kld(bc, (file_length))
+            sbc hl, bc
+            ld b, h \ ld c, l
+        pop hl
+        ld d, h \ ld e, l
+        inc de
+        xor a
+        ld (hl), a
+        dec bc
+        ldir
+    pop af
+    pop bc
+    pop de
+    pop hl
     scf
     ret
     ; TODO: shrink_buffer? Is that necessary?
@@ -113,9 +136,6 @@ insert_character:
     kld(bc, (buffer_index))
     add hl, bc
     ld (hl), a
-    inc hl
-    xor a
-    ld (hl), a ; null terminator
     ; Increment caret
     kld(hl, (buffer_index))
     inc hl
