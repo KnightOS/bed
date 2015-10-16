@@ -50,6 +50,8 @@ initialize:
 draw_loop:
     pcall(flushKeys)
     kcall(redraw_ui)
+    kcall(check_caret_on_screen)
+    jr nz, draw_loop
 main_loop:
     kcall(draw_caret)
     pcall(fastCopy)
@@ -80,20 +82,95 @@ handle_character:
     kjp(draw_loop)
 
 handle_left:
-    kld(a, (scroll_x))
-    or a
-    jr z, main_loop
-    dec a
-    kld((scroll_x), a)
+    kld(hl, (buffer_index))
+    ld bc, 0
+    pcall(cpHLBC)
+    kjp(z, main_loop)
+    dec hl
+    kld((buffer_index), hl)
     kjp(draw_loop)
 
 handle_right:
-    kld(a, (scroll_x))
-    inc a
-    kld((scroll_x), a)
+    kld(hl, (buffer_index))
+    push hl
+        kld(bc, (file_buffer))
+        add hl, bc
+        inc hl
+        ld a, (hl)
+    pop hl
+    or a
+    kjp(z, main_loop)
+    inc hl
+    kld((buffer_index), hl)
     kjp(draw_loop)
 
 handle_down:
+    kld(hl, (file_buffer))
+    kld(de, (file_buffer))
+    kld(bc, (buffer_index))
+    add hl, bc
+    push hl
+        ; Find the start of this line
+.sol_loop:
+        pcall(cpHLDE)
+        jr z, .sol
+        ld a, (hl)
+        dec hl
+        cp '\n'
+        jr nz, .sol_loop
+        inc hl \ inc hl
+.sol:
+        ; HL is at first character of this line
+        ld b, h \ ld c, l
+    pop hl
+    cp a
+    sbc hl, bc
+    ; HL is characters from start of line we WERE at
+    kld((.old_index), hl)
+
+    ld h, b \ ld l, c
+    ld a, '\n'
+    push hl
+        kld(hl, (file_buffer))
+        kld(bc, (file_length))
+        add hl, bc
+        kld(bc, (buffer_index))
+        cp a
+        sbc hl, bc
+        ld b, h \ ld c, l ; BC is remainder of file
+    pop hl
+    cpir ; To start of next line
+
+    ex de, hl
+    ld bc, 0
+.index_loop:
+    ld a, (de)
+    or a
+    jr z, .done
+    cp '\n'
+    jr z, .done
+    inc de
+    kld(hl, (.old_index))
+    dec hl
+    kld((.old_index), hl)
+    pcall(cpHLBC)
+    jr nz, .index_loop
+.done:
+    ex de, hl
+    ; HL is pointer to new cursor
+    kld(bc, (file_buffer))
+    cp a
+    sbc hl, bc
+    kld((buffer_index), hl)
+
+    kjp(draw_loop)
+.old_index:
+    .dw 0
+
+handle_up:
+    kjp(draw_loop)
+
+scroll_down:
     kld(hl, (file_buffer))
     kld(de, (file_top))
     add hl, de
@@ -108,7 +185,7 @@ handle_down:
     kld((file_top), de)
     kjp(draw_loop)
 
-handle_up:
+scroll_up:
     kld(hl, (file_buffer))
     kld(bc, (file_buffer))
     kld(de, (file_top))
@@ -133,6 +210,20 @@ handle_up:
 .end:
     kld((file_top), de)
     kjp(draw_loop)
+
+scroll_left:
+    kld(a, (scroll_x))
+    or a
+    kjp(z, main_loop)
+    dec a
+    kld((scroll_x), a)
+    ret
+
+scroll_right:
+    kld(a, (scroll_x))
+    inc a
+    kld((scroll_x), a)
+    ret
 
 get_window_title:
     kld(hl, (file_name))
