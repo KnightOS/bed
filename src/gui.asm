@@ -189,11 +189,6 @@ check_caret:
     pop hl
     ret
 
-check_caret_on_screen:
-    ; TODO
-    cp a
-    ret
-
 draw_caret:
     ; We increment caret_state each iteration
     ; When bit 7 changes, we toggle the caret

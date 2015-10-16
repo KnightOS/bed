@@ -15,8 +15,8 @@ name:
 #include "src/text.asm"
 #include "src/actions.asm"
 start:
-    kld(de, test_path)
-    jr run_open_file
+    ;kld(de, test_path)
+    ;jr run_open_file
     or a
     jr z, run_new_file
     cp 1
@@ -50,8 +50,6 @@ initialize:
 draw_loop:
     pcall(flushKeys)
     kcall(redraw_ui)
-    kcall(check_caret_on_screen)
-    jr nz, draw_loop
 main_loop:
     kcall(draw_caret)
     pcall(fastCopy)
