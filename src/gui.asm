@@ -51,6 +51,13 @@ draw_file:
     kld(bc, (file_top))
     add ix, bc
     ld de, 0x0008 ; X: 0, Y: 8
+    xor a
+    cp (ix)
+    jr nz, .line_loop
+    ld a, d
+    kld((caret_x), a)
+    ld a, e
+    kld((caret_y), a)
 .line_loop:
     kcall(draw_line)
     ld a, (ix)
