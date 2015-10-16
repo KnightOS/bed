@@ -125,6 +125,7 @@ draw_line:
     pop de
     pop hl
 .finish:
+    kcall(check_caret)
     kcall(.left_margin_mark)
     ; Skip to newline/end
     ld a, (ix)
@@ -133,7 +134,7 @@ draw_line:
     or a
     jr z, .newline
     cp '\n'
-    jr nz, .overflow
+    jr nz, .finish
     jr .newline
 .left_margin_mark:
     kld(a, (scroll_x))
@@ -216,5 +217,6 @@ draw_caret:
 _:  kld(a, (caret_y))
     ld e, a
     or a
-    pcall(nz, putSpriteXOR)
+    ret z
+    pcall(putSpriteXOR)
     ret
