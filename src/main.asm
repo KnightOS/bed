@@ -104,11 +104,7 @@ handle_right:
     kld((buffer_index), hl)
     kjp(draw_loop)
 
-handle_down:
-    kld(hl, (file_buffer))
-    kld(de, (file_buffer))
-    kld(bc, (buffer_index))
-    add hl, bc
+find_sol:
     push hl
         ; Find the start of this line
 .sol_loop:
@@ -126,7 +122,18 @@ handle_down:
     cp a
     sbc hl, bc
     ; HL is characters from start of line we WERE at
-    kld((.old_index), hl)
+    kld((old_index), hl)
+    ret
+
+old_index:
+    .dw 0
+
+handle_down:
+    kld(hl, (file_buffer))
+    kld(de, (file_buffer))
+    kld(bc, (buffer_index))
+    add hl, bc
+    kcall(find_sol)
 
     ld h, b \ ld l, c
     ld a, '\n'
@@ -143,6 +150,14 @@ handle_down:
 
     ex de, hl
     ld bc, 0
+    kcall(.index_loop)
+
+    kld(a, (caret_y))
+    cp 0x32
+    kcall(z, scroll_down)
+
+    kjp(draw_loop)
+
 .index_loop:
     ld a, (de)
     or a
@@ -150,9 +165,9 @@ handle_down:
     cp '\n'
     jr z, .done
     inc de
-    kld(hl, (.old_index))
+    kld(hl, (old_index))
     dec hl
-    kld((.old_index), hl)
+    kld((old_index), hl)
     pcall(cpHLBC)
     jr nz, .index_loop
 .done:
@@ -162,12 +177,38 @@ handle_down:
     cp a
     sbc hl, bc
     kld((buffer_index), hl)
-
-    kjp(draw_loop)
-.old_index:
-    .dw 0
+    ret
 
 handle_up:
+    kld(hl, (file_buffer))
+    kld(de, (file_buffer))
+    kld(bc, (buffer_index))
+    add hl, bc
+    pcall(cpHLBC)
+    kjp(z, main_loop)
+    kcall(find_sol)
+
+    kld(de, (file_buffer))
+    ld h, b \ ld l, c
+    kld(bc, (buffer_index))
+    dec bc
+    dec bc \ dec hl
+    dec bc \ dec hl
+
+    pcall(cpHLDE)
+    kjp(c, main_loop)
+
+    ld a, '\n'
+    cpdr ; To start of previous line
+    inc hl \ inc hl
+    ex de, hl
+    ld bc, 0
+    kcall(index_loop@handle_down)
+
+    kld(a, (caret_y))
+    cp 8
+    kcall(z, scroll_up)
+
     kjp(draw_loop)
 
 scroll_down:
