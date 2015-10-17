@@ -103,7 +103,11 @@ handle_right:
     kjp(draw_loop)
 
 find_sol:
-    push hl
+    ld a, (hl)
+    cp '\n'
+    jr nz, _
+    dec hl
+_:  push hl
         ; Find the start of this line
 .sol_loop:
         pcall(cpHLDE)
