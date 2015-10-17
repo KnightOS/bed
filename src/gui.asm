@@ -41,12 +41,7 @@ file_top:
 scroll_x:
     .db 0 ; Characters scrolled out of view on the left
 
-end_visible:
-    .db 0 ; 1 if the end of the file is on-screen
-
 draw_file:
-    xor a
-    kld((end_visible), a)
     kld(ix, (file_buffer))
     kld(bc, (file_top))
     add ix, bc
@@ -68,8 +63,6 @@ draw_file:
     ret z
     jr .line_loop
 .eof:
-    inc a
-    kld((end_visible), a)
     ret
 
 ; This should skip characters until we encounter one that'll show on-screen
@@ -79,7 +72,7 @@ draw_line:
     or a
     ret z
     cp '\n'
-    jr z, .newline
+    jr z, .newline_inc
 
     push ix \ pop hl
     kld(a, (scroll_x))
@@ -110,6 +103,8 @@ draw_line:
     jr z, .finish
     jr c, .overflow
     jr .loop
+.newline_inc:
+    inc ix
 .newline:
     kcall(.left_margin_mark)
     ld b, 0
