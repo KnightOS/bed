@@ -148,7 +148,12 @@ handle_down:
 
     ex de, hl
     ld bc, 0
-    kcall(.index_loop)
+    kld(hl, (old_index))
+    pcall(cpHLBC)
+    push af
+        kcall(z, .done)
+    pop af
+    kcall(nz, .index_loop)
 
     kld(a, (caret_y))
     cp 0x32
