@@ -214,8 +214,13 @@ handle_up:
     kjp(z, main_loop)
 
     ld a, '\n'
-    cpdr ; To start of this line
-    ld de, 0
+    cp (hl)
+    jr nz, _
+    dec hl
+    dec bc
+    jr _
+_:  cpdr ; To start of this line
+_:  ld de, 0
     pcall(cpBCDE)
     jr z, .found_line
     cpdr ; To start of previous line
