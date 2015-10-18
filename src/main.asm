@@ -103,11 +103,12 @@ handle_right:
     kjp(draw_loop)
 
 find_sol:
-    ld a, (hl)
-    cp '\n'
-    jr nz, _
-    dec hl
-_:  push hl
+    push hl
+        ld a, (hl)
+        cp '\n'
+        jr nz, _
+        dec hl
+_:  
         ; Find the start of this line
 .sol_loop:
         pcall(cpHLDE)
@@ -197,20 +198,37 @@ handle_up:
 
     kld(de, (file_buffer))
     ld h, b \ ld l, c
-    kld(bc, (buffer_index))
-    dec bc
-    dec bc \ dec hl
-    dec bc \ dec hl
+    push hl
+        kld(hl, (buffer_index))
+        kld(bc, (old_index))
+        scf \ ccf
+        sbc hl, bc
+        ld b, h \ ld c, l
+    pop hl
 
     pcall(cpHLDE)
     kjp(c, main_loop)
+    kjp(z, main_loop)
 
     ld a, '\n'
+    cpdr ; To start of this line
+    ld de, 0
+    pcall(cpBCDE)
+    jr z, .found_line
     cpdr ; To start of previous line
+    ld de, 0
+    pcall(cpBCDE)
+    jr z, .found_line
     inc hl \ inc hl
+
+.found_line:
     ex de, hl
-    ld bc, 0
-    kcall(index_loop@handle_down)
+    kld(hl, (old_index))
+    pcall(cpHLBC)
+    push af
+        kcall(z, done@handle_down)
+    pop af
+    kcall(nz, index_loop@handle_down)
 
     kld(a, (caret_y))
     cp 8
