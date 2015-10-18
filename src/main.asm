@@ -216,12 +216,12 @@ handle_up:
     pcall(cpBCDE)
     jr z, .found_line
     cpdr ; To start of previous line
-    ld de, 0
     pcall(cpBCDE)
     jr z, .found_line
     inc hl \ inc hl
 
 .found_line:
+    ld bc, 0
     ex de, hl
     kld(hl, (old_index))
     pcall(cpHLBC)
