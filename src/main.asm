@@ -15,15 +15,11 @@ name:
 #include "src/text.asm"
 #include "src/actions.asm"
 start:
-    ;kld(de, test_path)
-    ;jr run_open_file
     or a
     jr z, run_new_file
     cp 1
     jr z, run_open_file
     ret
-test_path:
-    .db "/home/main.asm", 0
 
 run_new_file:
     kcall(initialize)
@@ -261,28 +257,15 @@ scroll_down:
 
 scroll_up:
     kld(hl, (file_buffer))
+    kld(de, (file_buffer))
+    kld(bc, (buffer_index))
+    add hl, bc
+    kcall(find_sol)
+    ld h, b \ ld l, c
     kld(bc, (file_buffer))
-    kld(de, (file_top))
-    add hl, de
-.first_loop: ; find the previous newline
-    pcall(cpHLBC)
-    kjp(z, draw_loop) ; abort
-    ld a, (hl)
-    dec hl
-    dec de
-    cp '\n'
-    jr nz, .first_loop
-.loop: ; find the next one
-    pcall(cpHLBC)
-    jr z, .end
-    ld a, (hl)
-    dec hl
-    dec de
-    cp '\n'
-    jr nz, .loop
-    inc de \ inc de
-.end:
-    kld((file_top), de)
+    scf \ ccf
+    sbc hl, bc
+    kld((file_top), hl)
     ret
 
 scroll_left:
