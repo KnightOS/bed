@@ -23,7 +23,7 @@ start:
     jr z, run_open_file
     ret
 test_path:
-    .db "/var/applications/bed.app", 0
+    .db "/home/main.asm", 0
 
 run_new_file:
     kcall(initialize)
@@ -257,7 +257,7 @@ scroll_down:
     cp '\n'
     jr nz, .loop
     kld((file_top), de)
-    kjp(draw_loop)
+    ret
 
 scroll_up:
     kld(hl, (file_buffer))
@@ -283,7 +283,7 @@ scroll_up:
     inc de \ inc de
 .end:
     kld((file_top), de)
-    kjp(draw_loop)
+    ret
 
 scroll_left:
     kld(a, (scroll_x))
