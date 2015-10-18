@@ -23,7 +23,7 @@ start:
     jr z, run_open_file
     ret
 test_path:
-    .db "/var/applications/bed.app", 0
+    .db "/home/main.asm", 0
 
 run_new_file:
     kcall(initialize)
@@ -141,15 +141,18 @@ handle_down:
     ld h, b \ ld l, c
     ld a, '\n'
     push hl
-        kld(hl, (file_buffer))
-        kld(bc, (file_length))
-        add hl, bc
+        kld(hl, (file_length))
         kld(bc, (buffer_index))
-        cp a
+        scf \ ccf
         sbc hl, bc
+        kld(bc, (old_index))
+        add hl, bc
         ld b, h \ ld c, l ; BC is remainder of file
     pop hl
     cpir ; To start of next line
+    ld a, (hl)
+    or a
+    kjp(z, main_loop) ; eof
 
     ex de, hl
     ld bc, 0
