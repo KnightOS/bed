@@ -23,7 +23,7 @@ start:
     jr z, run_open_file
     ret
 test_path:
-    .db "/home/main.asm", 0
+    .db "/var/applications/bed.app", 0
 
 run_new_file:
     kcall(initialize)

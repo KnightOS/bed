@@ -65,8 +65,8 @@ draw_file:
 .eof:
     ret
 
-; This should skip characters until we encounter one that'll show on-screen
 draw_line:
+    push ix \ pop hl
     ; Early exit (avoids drawing continuation mark on left)
     ld a, (ix)
     or a
@@ -74,7 +74,6 @@ draw_line:
     cp '\n'
     jr z, .newline_inc
 
-    push ix \ pop hl
     kld(a, (scroll_x))
     or a
     jr z, .loop
@@ -104,6 +103,7 @@ draw_line:
     jr c, .overflow
     jr .loop
 .newline_inc:
+    kcall(check_caret)
     inc ix
 .newline:
     kcall(.left_margin_mark)
