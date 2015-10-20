@@ -19,18 +19,20 @@ _:  pop hl
     corelib(promptString)
     or a
     kjp(z, draw_loop)
-    push ix \ pop de
-    pcall(openFileWrite)
-    kld(bc, (file_length))
-    kld(ix, (file_buffer))
-    pcall(streamWriteBuffer)
-    pcall(closeStream)
+    push ix
+        push ix \ pop de
+        pcall(openFileWrite)
+        kld(bc, (file_length))
+        kld(ix, (file_buffer))
+        pcall(streamWriteBuffer)
+        pcall(closeStream)
 
-    kld(hl, (file_name))
-    ld bc, 0
-    pcall(cpHLBC)
-    pcall(nz, free) ; Free file name
-    kld((file_name), ix)
+        kld(hl, (file_name))
+        ld bc, 0
+        pcall(cpHLBC)
+        pcall(nz, free) ; Free file name
+    pop hl
+    kld((file_name), hl)
     kjp(draw_loop)
 
 save_prompt:
