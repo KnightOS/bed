@@ -15,16 +15,22 @@ action_save:
         push ix \ pop de
         ldir
 _:  pop hl
+    ld bc, 0x100
     corelib(promptString)
     or a
     kjp(z, draw_loop)
     push ix \ pop de
     pcall(openFileWrite)
-    pcall(free) ; Free file name
     kld(bc, (file_length))
     kld(ix, (file_buffer))
     pcall(streamWriteBuffer)
     pcall(closeStream)
+
+    kld(hl, (file_name))
+    ld bc, 0
+    pcall(cpHLBC)
+    pcall(nz, free) ; Free file name
+    kld((file_name), ix)
     kjp(draw_loop)
 
 save_prompt:
