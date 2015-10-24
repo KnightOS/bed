@@ -97,7 +97,7 @@ overwrite_character:
 
 insert_character:
     cp 0x08 ; Backspace
-    jr z, delete_character
+    jr z, backspace
     ; Check if we need to expand the buffer
     kld(hl, (file_length))
     inc hl ; Null terminator
@@ -146,7 +146,7 @@ insert_character:
     kld((file_length), bc)
     ret
 
-delete_character:
+backspace:
     kld(hl, (buffer_index))
     dec hl
     kld((buffer_index), hl)
@@ -155,9 +155,10 @@ delete_character:
     ld d, h \ ld e, l
     inc hl
     push hl
+        kld(hl, (file_length))
         kld(bc, (buffer_index))
-        kld(hl, (file_length)) ; TODO: Pretty sure this is wrong
-        add hl, bc
+        scf \ ccf
+        sbc hl, bc
         ld b, h \ ld c, l
     pop hl
     ldir

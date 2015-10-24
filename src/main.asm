@@ -86,15 +86,14 @@ handle_left:
 
 handle_right:
     kld(hl, (buffer_index))
-    push hl
-        kld(bc, (file_buffer))
-        add hl, bc
-        inc hl
-        ld a, (hl)
-    pop hl
-    or a
-    kjp(z, main_loop)
+    ; we can move the cursor to the end of the file, so inc bc
+    kld(bc, (file_length)) \ inc bc
     inc hl
+    push hl
+        scf \ ccf
+        sbc hl, bc
+    pop hl
+    kjp(nc, main_loop)
     kld((buffer_index), hl)
     kjp(draw_loop)
 
