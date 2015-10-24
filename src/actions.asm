@@ -21,6 +21,7 @@ _:  pop hl
     kjp(z, draw_loop)
     push ix
         push ix \ pop de
+        pcall(deleteFile)
         pcall(openFileWrite)
         kld(bc, (file_length))
         kld(ix, (file_buffer))
