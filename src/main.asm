@@ -51,10 +51,11 @@ main_loop:
     pcall(fastCopy)
     corelib(getCharacterInput)
     pcall(nz, flushKeys) ; Flush keys if we lost focus
-    push bc
-        kcall(handle_character)
-    pop bc
-    ld a, b
+    or a
+    jr z, _
+    kcall(insert_character)
+    jr draw_loop
+_:  ld a, b
     cp kLeft
     kjp(z, handle_left)
     cp kRight
@@ -68,12 +69,6 @@ main_loop:
     or a
     pcall(nz, flushKeys)
     jr main_loop
-
-handle_character:
-    or a
-    ret z
-    kcall(insert_character)
-    kjp(draw_loop)
 
 handle_left:
     kld(hl, (buffer_index))
